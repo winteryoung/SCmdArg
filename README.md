@@ -2,6 +2,10 @@
 
 A Scala command line argument/option parser.
 
+## License
+This project is distributed under the Apache software license, version 2.0.
+You can see the terms here: http://www.apache.org/licenses/LICENSE-2.0.txt
+
 ## Simplest case
 ```scala
 import com.iteye.yangdong.scmdarg._
