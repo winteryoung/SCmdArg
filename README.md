@@ -4,8 +4,8 @@ A Scala command line argument/option parser.
 
 ## Simplest case
 ```scala
-import com.iteye.yangdong._
-import com.iteye.yangdong.CmdArgValueConverter._
+import com.iteye.yangdong.scmdarg._
+import com.iteye.yangdong.scmdarg.CmdArgValueConverter._
 
 def main(args: Array[String]) {
   val cmdArgs = new CmdArgParser(args) {
