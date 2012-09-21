@@ -22,6 +22,11 @@ Given the command line argument "--arg1 1", running this app will output:
 arg1 value: 2
 ```
 
+## Installation
+SCmdArg uses Maven to build itself. Please see the POM to get the correct groupId and artifactId. Currently it
+has not been uploaded to Maven central repository. If you need to use it before the upload, please download
+the source and `mvn install` on your machine. It doesn't rely on anything except the Scala runtime.
+
 ## Features
 
 ### Linux Command Line Style
