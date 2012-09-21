@@ -88,7 +88,7 @@ abstract class CmdArgParser(realArgs: Array[String]) {
     }
   }
 
-  protected final def displayHelp() {
+  def displayHelp() {
     _outWriter.write(_appDesc + newline)
     displayArgsDescription()
     _outWriter.flush()
