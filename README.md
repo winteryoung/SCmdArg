@@ -2,7 +2,8 @@
 
 A Scala command line argument/option parser.
 
-## Simplest case
+## Simplest Case
+
 ```scala
 import com.iteye.yangdong.scmdarg._
 import com.iteye.yangdong.scmdarg.CmdArgValueConverter._
@@ -25,19 +26,23 @@ arg1 value: 2
 ## Features
 
 ### Linux Command Line Style
+
 #### Long argument names
+
 Long argument names start with double dashes "--".
 ```scala
 arg[String]("arg1")
 ```
 
 #### Short argument names
+
 Short argument names start with a single dash "-".
 ```scala
 arg[String]("arg1", shortName = Some('a'))
 ```
 
 #### Boolean arguments
+
 Turning a boolean argument value to `true` requires the presence of the argument name. Explicitly setting `true` or `false` is not supported and the default value to a boolean argument must be `false`.
 **Defining the argument**
 ```scala
@@ -55,7 +60,9 @@ true
 ```
 
 #### Combining short argument names
+
 ##### Example 1. Boolean arguments combination
+
 **Defining the arguments**
 ```scala
 val xx = arg[Boolean]("xx", shortName = Some('x'))
@@ -69,6 +76,7 @@ val zz = arg[Boolean]("zz", shortName = Some('z'))
 ```
 
 ##### Example 2. `GREP` style arguments combination
+
 The `grep` command in the Linux boxes allow one to retrieve the contextual information of the matching lines. Let's say we wan to retrieve 1 line before the matching line and 3 lines after, we can write this:
 ```shell
 someCommand | grep -A1 -B3 somePattern
@@ -87,9 +95,11 @@ val after = arg[Int]("after", shortName = Some('A'))
 ```
 
 ### Help Support
+
 You can display the help message explicitly by invoking the `displayHelp()` method. SCmdArg automatically displays help when an argument parsing error occurred. The help message is composed of the application description which you would specify by setting `appDesc` property of `CmdArgParser` and the argument description list.
 
 ### Type Safety and Command Argument Converters
+
 Like you have already seen, a type argument is required to define an command argument. The built-in supported types includes (for the most up to date list see the source of `CmdArgValueConverter`):
 * String
 * Byte
@@ -122,6 +132,7 @@ val cmdArgs = new CmdArgParser(args) {
 SCmdArg doesn't have a regex like validation support. If you want some very special validation, define a type and write a type converter.
 
 ### The Default Argument
+
 ```scala
 val cmdArgs = new CmdArgParser(args) {
   val arg1 = arg[Int]("arg1", isDefault = true)
@@ -134,6 +145,7 @@ arg1: 2
 ```
 
 ### Default values
+
 ```scala
 val cmdArgs = new CmdArgParser(args) {
   val arg1 = arg[Int]("arg1", default = Some(1))
@@ -146,7 +158,9 @@ arg1: 1
 ```
 
 ### Validation
+
 #### Required arguments
+
 ```scala
 val cmdArgs = new CmdArgParser(args) {
   val arg1 = arg[Int]("arg1", isRequired = true)
@@ -155,6 +169,7 @@ val cmdArgs = new CmdArgParser(args) {
 Invoking this command without giving any arguments will cause the app to exit and the error message and the the help message will be displayed.
 
 #### Valid Value Set
+
 ```scala
 val cmdArgs = new CmdArgParser(args) {
   val arg1 = arg[Int]("arg1", isRequired = true, validValueSet = Set("a", "b", "c"))
@@ -163,6 +178,7 @@ val cmdArgs = new CmdArgParser(args) {
 Invoking this command without giving `arg1` a value or value other than "a", "b", "c" will cause error.
 
 #### Dependencies and Exclusiveness Between Arguments
+
 Let's say you are writing an app that counts the line numbers of the given input or file. An argument "--printFileName" would only make sense if a file was given. So:
 ```scala
 val cmdArgs = new CmdArgParser(args) {
@@ -196,3 +212,14 @@ a even more crazy example:
 ```scala
 rel((z or (x and y)) ~> (u or v))
 ```
+
+## What's Not Supported?
+
+SCmdArg doesn't support some features in other command line argument parsers (like Argot):
+
+* Multiple default arguments / positional arguments
+Multiple default arguments allows you to specify multiple arguments without giving their argument names.
+
+* Multi-value arguments
+A multi-value option is one that takes a single value, but if it appears multiple times on the command line,
+each occurrence adds its value to the list of already accumulated values for the option.

@@ -5,9 +5,21 @@
   <artifactId>SCmdArg</artifactId>
   <version>1.0-SNAPSHOT</version>
   <inceptionYear>2012</inceptionYear>
+  <name>Scala Command Line Argument Parser</name>
+  <description>Scala command line argument/option parser.\</description>
+  <url>https://github.com/winteryoung/SCmdArg</url>
+
   <properties>
     <scala.version>2.9.1</scala.version>
   </properties>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <dependencies>
     <dependency>
@@ -41,17 +53,18 @@
           <scalaVersion>${scala.version}</scalaVersion>
         </configuration>
       </plugin>
-    </plugins>
-  </build>
-  <reporting>
-    <plugins>
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-        <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
-        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
-  </reporting>
+  </build>
 </project>

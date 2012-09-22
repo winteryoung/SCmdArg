@@ -9,10 +9,10 @@ import CmdArgValueConverter._
 class CmdArgParserTest extends FunSuite {
   test("Parse long name arg") {
     val args = Array("--arg1", "1")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Int]("arg1")
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(1) {
       cmdArgs.arg1.get
@@ -21,10 +21,10 @@ class CmdArgParserTest extends FunSuite {
 
   test("Parse single short name arg") {
     val args = Array("-a", "1")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Int]("arg1", shortName = Some('a'))
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(1) {
       cmdArgs.arg1.get
@@ -33,10 +33,10 @@ class CmdArgParserTest extends FunSuite {
 
   test("Parse compact short name arg") {
     val args = Array("-a1")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Int]("arg1", shortName = Some('a'))
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(1) {
       cmdArgs.arg1.get
@@ -45,10 +45,10 @@ class CmdArgParserTest extends FunSuite {
 
   test("Parse present long name boolean arg") {
     val args = Array("--arg1")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Boolean]("arg1")
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(true) {
       cmdArgs.arg1.get
@@ -57,10 +57,10 @@ class CmdArgParserTest extends FunSuite {
 
   test("Parse absent long name boolean arg") {
     val args = Array[String]()
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Boolean]("arg1")
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(false) {
       cmdArgs.arg1.get
@@ -69,7 +69,7 @@ class CmdArgParserTest extends FunSuite {
 
   test("Boolean CmdArg with a true default value") {
     intercept[Exception] {
-      new CmdArgParser(Array[String]()) {
+      new CmdArgParser("app") {
         val arg1 = arg[Boolean]("arg1", default = Some("true"))
       }
     }
@@ -77,10 +77,10 @@ class CmdArgParserTest extends FunSuite {
 
   test("Parse single short name boolean arg") {
     val args = Array("-a")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Boolean]("arg1", shortName = Some('a'))
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(true) {
       cmdArgs.arg1.get
@@ -89,11 +89,11 @@ class CmdArgParserTest extends FunSuite {
 
   test("Parse compact multiple short name boolean arg") {
     val args = Array("-ab")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Boolean]("arg1", shortName = Some('a'))
       val arg2 = arg[Boolean]("arg2", shortName = Some('b'))
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(true) {
       cmdArgs.arg1.get
@@ -105,10 +105,10 @@ class CmdArgParserTest extends FunSuite {
   
   test("Have the required arg") {
     val args = Array("--arg1", "1")
-    val cmdArgs = new CmdArgParser(args) {
+    val cmdArgs = new CmdArgParser("app") {
       val arg1 = arg[Int]("arg1", isRequired = true)
     }
-    cmdArgs.parse0()
+    cmdArgs.parse0(args)
 
     expect(1) {
       cmdArgs.arg1.get
@@ -118,46 +118,54 @@ class CmdArgParserTest extends FunSuite {
   test("Miss the required arg") {
     intercept[CmdArgParserException] {
       val args = Array[String]()
-      val cmdArgs = new CmdArgParser(args) {
+      val cmdArgs = new CmdArgParser("app") {
         val arg1 = arg[Int]("arg1", isRequired = true)
       }
-      cmdArgs.parse0()
+      cmdArgs.parse0(args)
     }
   }
 
   test("Invalid arg value for the arg type") {
     intercept[CmdArgParserException] {
       val args = Array("--arg1", "a")
-      new CmdArgParser(args) {
+      new CmdArgParser("app") {
         val arg1 = arg[Int]("arg1")
-      }.parse0()
+      }.parse0(args)
     }
   }
 
   test("depends on relationship") {
     intercept[CmdArgParserException] {
       val args = Array("--arg1", "1")
-      new CmdArgParser(args) {
+      new CmdArgParser("app") {
         val arg1 = arg[Int]("arg1")
         val arg2 = arg[Int]("arg2")
 
         rel(arg1 ~> arg2)
-      }.parse0()
+      }.parse0(args)
     }
   }
 
   test("Valid value set") {
-    def createParser(args: Array[String]) = {
-      new CmdArgParser(args) {
+    def createParser() = {
+      new CmdArgParser("app") {
         val arg1 = arg[Int]("arg1", validValueSet = Some(Set("2", "3")))
       }
     }
 
-    createParser(Array("--arg1", "2")).parse0()
-    createParser(Array("--arg1", "3")).parse0()
-    createParser(Array()).parse0()
+    createParser().parse0(Array("--arg1", "2"))
+    createParser().parse0(Array("--arg1", "3"))
+    createParser().parse0(Array())
     intercept[CmdArgParserException] {
-      createParser(Array("--arg1", "1")).parse0()
+      createParser().parse0(Array("--arg1", "1"))
     }
+  }
+
+  test("Default arg") {
+    val cmdArgs = new CmdArgParser("app") {
+      val arg1 = arg[Int]("arg1", isDefault = true)
+    }
+    cmdArgs.parse0(Array("1"))
+    expect(1) { cmdArgs.arg1.get }
   }
 }

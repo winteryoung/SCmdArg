@@ -6,7 +6,7 @@ import collection.mutable
 /**
  * @author Winter Young
  */
-abstract class CmdArgParser(realArgs: Array[String]) {
+abstract class CmdArgParser(appDesc: String) {
   private val cmdArgTable = new CmdArgTable()
   private val cmdArgRelationships = mutable.ListBuffer[CmdArgRelationship]()
 
@@ -16,8 +16,6 @@ abstract class CmdArgParser(realArgs: Array[String]) {
 
   private var _outWriter: Writer = new PrintWriter(System.out)
   private var _errWriter: Writer = new PrintWriter(System.err)
-
-  private var _appDesc: String = ""
 
   protected val helpArg = arg[Boolean]("help", desc = "Display this help message", shortName = Some('h'))
 
@@ -37,9 +35,9 @@ abstract class CmdArgParser(realArgs: Array[String]) {
 
   def hasError: Boolean = error
 
-  def parse() {
+  def parse(args: Array[String]) {
     try {
-      parse0()
+      parse0(args)
 
       if (helpArg.get) {
         displayHelp()
@@ -62,34 +60,39 @@ abstract class CmdArgParser(realArgs: Array[String]) {
     }
   }
 
-  private[scmdarg] def parse0() {
-    populateCmdArgTable()
+  private[scmdarg] def parse0(args: Array[String]) {
+    populateCmdArgTable(args)
     validate()
   }
 
   private def displayArgsDescription() {
+    _outWriter.write("OPTIONS" + newline + newline)
     for (argName <- cmdArgTable.argNameSeq) {
-      _outWriter.write("   --" + argName)
       val cmdArg = cmdArgTable.getDef(argName)
+      val valueName = cmdArg.valueName
+
       if (cmdArg.shortName != None) {
-        _outWriter.write(", -" + cmdArg.shortName.get)
+        _outWriter.write("-%s %s" format (cmdArg.shortName.get, valueName))
+        _outWriter.write(newline)
       }
-      _outWriter.write(":" + newline)
-      _outWriter.write("      " + cmdArg.desc + newline)
+      _outWriter.write("--%s %s" format (argName, valueName))
+      _outWriter.write(newline)
+
+      _outWriter.write("   " + cmdArg.desc + newline)
       if (cmdArg.isRequired) {
-        _outWriter.write("      Is required" + newline)
+        _outWriter.write("   Is required" + newline)
       }
       if (cmdArg.isDefault) {
-        _outWriter.write("      Is default" + newline)
+        _outWriter.write("   Is default" + newline)
       }
       if (cmdArg.default != None) {
-        _outWriter.write("      Default value = " + cmdArg.default.get + newline)
+        _outWriter.write("   Default value = " + cmdArg.default.get + newline)
       }
     }
   }
 
   def displayHelp() {
-    _outWriter.write(_appDesc + newline)
+    _outWriter.write(appDesc + newline)
     displayArgsDescription()
     _outWriter.flush()
   }
@@ -102,7 +105,7 @@ abstract class CmdArgParser(realArgs: Array[String]) {
     }
   }
 
-  private def populateCmdArgTable() {
+  private def populateCmdArgTable(realArgs: Array[String]) {
     val realArgStack = mutable.Stack(realArgs: _*)
     while (!realArgStack.isEmpty && !realArgStack.top.trim().isEmpty) {
       val realArg = realArgStack.pop()
@@ -113,8 +116,10 @@ abstract class CmdArgParser(realArgs: Array[String]) {
         parseShortNameArg(realArg, realArgStack)
       }
       else {
-        val defaultArgName = cmdArgTable.getDefaultArgName
-        cmdArgTable.setArgValue(defaultArgName, realArg)
+        cmdArgTable.getDefaultArgName match {
+          case Some(d) => cmdArgTable.setArgValue(d, realArg)
+          case None =>
+        }
       }
     }
   }
@@ -160,24 +165,19 @@ abstract class CmdArgParser(realArgs: Array[String]) {
   def arg[T](argName: String,
              desc: String = "",
              shortName: Option[Char] = None,
+             valueName: String = "",
              isRequired: Boolean = false,
              isDefault: Boolean = false,
              default: Option[String] = None,
              validValueSet: Option[Set[String]] = None)
             (implicit valueConverter: CmdArgValueConverter[T],
                       classManifestOfT: ClassManifest[T]): CmdArg[T] = {
-    val cmdArg = CmdArg(cmdArgTable, argName, desc, shortName, isRequired, isDefault, default, validValueSet = validValueSet)
+    val cmdArg = CmdArg(cmdArgTable, argName, desc, shortName, valueName, isRequired, isDefault, default, validValueSet = validValueSet)
     cmdArgTable.defineArg(cmdArg)
     cmdArg
   }
 
   def rel(argRel: CmdArgRelationship) {
     cmdArgRelationships += argRel
-  }
-
-  def appDesc: String = _appDesc
-
-  def appDesc_=(appDescription: String) {
-    _appDesc = appDescription
   }
 }

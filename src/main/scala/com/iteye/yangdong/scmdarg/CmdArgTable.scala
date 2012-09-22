@@ -10,6 +10,7 @@ class CmdArgTable {
   private val shortNameToLongName = mutable.HashMap.empty[Char, String]
   private val valueTable = mutable.HashMap.empty[String, String]
   private val argNameList = mutable.ListBuffer[String]()
+  private var defaultArgName: Option[String] = None
 
   def argNameSet: collection.Set[String] = {
     valueTable.keySet
@@ -73,6 +74,13 @@ class CmdArgTable {
         case _ =>
       }
     }
+
+    if (cmdArg.isDefault) {
+      defaultArgName match {
+        case None => defaultArgName = Some(cmdArg.argName)
+        case _ => throw new CmdArgParserException("Multiple default arguments are not supported")
+      }
+    }
   }
 
   def setArgValue(argName: String, argValue: String) {
@@ -88,5 +96,5 @@ class CmdArgTable {
     valueTable(argName) = argValue
   }
 
-  def getDefaultArgName: String = ""
+  def getDefaultArgName: Option[String] = defaultArgName
 }
