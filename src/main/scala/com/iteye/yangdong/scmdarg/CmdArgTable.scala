@@ -8,17 +8,11 @@ import collection.mutable
 class CmdArgTable {
   private val defTable = mutable.HashMap.empty[String, CmdArg[_]]
   private val shortNameToLongName = mutable.HashMap.empty[Char, String]
-  private val valueTable = mutable.HashMap.empty[String, String]
-  private val argNameList = mutable.ListBuffer[String]()
   private var defaultArgName: Option[String] = None
 
-  def argNameSet: collection.Set[String] = {
-    valueTable.keySet
-  }
+  private[scmdarg] val valueTable = new CmdArgValueTable
 
-  def argNameSeq: Seq[String] = {
-    argNameList
-  }
+  def argNames = valueTable.argNames
 
   def validateRequiredness() {
     for (cmdArg <- defTable.values if cmdArg.isRequired) {
@@ -28,8 +22,8 @@ class CmdArgTable {
     }
   }
 
-  def getValue(argName: String): String = {
-    if (!valueTable.contains(argName)) {
+  def getValue(argName: String): Seq[String] = {
+    if (!valueTable.isValueGiven(argName)) {
       throw new CmdArgParserException("Value for \"--%s\" was not given" format argName)
     }
     valueTable(argName)
@@ -50,29 +44,15 @@ class CmdArgTable {
   }
 
   def isValueGiven(argName: String): Boolean = {
-    valueTable.contains(argName)
+    valueTable.isValueGiven(argName)
   }
 
   def defineArg[T](cmdArg: CmdArg[T]) {
     defTable(cmdArg.argName) = cmdArg
-    argNameList += cmdArg.argName
 
     cmdArg.shortName match {
       case Some(s) => shortNameToLongName(s) = cmdArg.argName
       case _ =>
-    }
-
-    if (cmdArg.isBooleanCmdArg) {
-      if (cmdArg.default.isDefined && cmdArg.default.get == "true") {
-        throw new Exception("A boolean CmdArg can't have a true default value")
-      }
-      valueTable(cmdArg.argName) = "false"
-    }
-    else {
-      cmdArg.default match {
-        case Some(d) => valueTable(cmdArg.argName) = d
-        case _ =>
-      }
     }
 
     if (cmdArg.isDefault) {
@@ -85,15 +65,15 @@ class CmdArgTable {
 
   def setArgValue(argName: String, argValue: String) {
     // try to convert the value first to ensure the value conforms to the expected type
-    val cmdArg = defTable(argName)
-    cmdArg.valueConverter(argValue)
+    val cmdArg = getDef(argName)
+    cmdArg.validateValue(argValue)
 
     if (cmdArg.validValueSet != None && !(cmdArg.validValueSet.get)(argValue)) {
       val possibleValues = cmdArg.validValueSet.get.mkString(", ")
       throw new CmdArgParserException(""""%s" is not a valid value for "--%s". The possible values are: (%s)""" format (argValue, argName, possibleValues))
     }
 
-    valueTable(argName) = argValue
+    valueTable.addValue(argName, argValue)
   }
 
   def getDefaultArgName: Option[String] = defaultArgName

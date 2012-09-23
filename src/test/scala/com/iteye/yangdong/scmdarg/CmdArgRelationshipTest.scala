@@ -8,41 +8,41 @@ import CmdArgRelationshipTypeEnum._
  */
 class CmdArgRelationshipTest extends FunSuite {
   test("Normal depends on relationshiop") {
-    val arg1 = ArgComb("arg1")
-    val arg2 = ArgComb("arg2")
-    val args = Set("arg1", "arg2")
-    CmdArgRelationship(DependsOn, arg1, arg2).verify(args)
+    val arg1 = ArgMatcher("arg1")
+    val arg2 = ArgMatcher("arg2")
+    val valueTable = new CmdArgValueTable(("arg1", "1"), ("arg2", "1"))
+    CmdArgRelationship(DependsOn, arg1, arg2).verify(valueTable)
   }
 
   test("Unsuccessful depends on relationship") {
-    val arg1 = ArgComb("arg1")
-    val arg2 = ArgComb("arg2")
-    val args = Set("arg1")
+    val arg1 = ArgMatcher("arg1")
+    val arg2 = ArgMatcher("arg2")
+    val valueTable = new CmdArgValueTable(("arg1", "1"))
     intercept[CmdArgParserException] {
-      CmdArgRelationship(DependsOn, arg1, arg2).verify(args)
+      CmdArgRelationship(DependsOn, arg1, arg2).verify(valueTable)
     }
   }
 
   test("Normal exclusive from relationshiop") {
-    val arg1 = ArgComb("arg1")
-    val arg2 = ArgComb("arg2")
-    val args = Set("arg2")
-    CmdArgRelationship(ExclusiveFrom, arg1, arg2).verify(args)
+    val arg1 = ArgMatcher("arg1")
+    val arg2 = ArgMatcher("arg2")
+    val valueTable = new CmdArgValueTable(("arg2", "1"))
+    CmdArgRelationship(ExclusiveFrom, arg1, arg2).verify(valueTable)
   }
 
   test("Unsuccessful exclusive from relationship") {
-    val arg1 = ArgComb("arg1")
-    val arg2 = ArgComb("arg2")
-    val args = Set("arg1", "arg2")
+    val arg1 = ArgMatcher("arg1")
+    val arg2 = ArgMatcher("arg2")
+    val valueTable = new CmdArgValueTable(("arg1", "1"), ("arg2", "1"))
     intercept[CmdArgParserException] {
-      CmdArgRelationship(ExclusiveFrom, arg1, arg2).verify(args)
+      CmdArgRelationship(ExclusiveFrom, arg1, arg2).verify(valueTable)
     }
   }
 
   test("empty args") {
-    val arg1 = ArgComb("arg1")
-    val arg2 = ArgComb("arg2")
-    val args = Set[String]()
-    CmdArgRelationship(ExclusiveFrom, arg1, arg2).verify(args)
+    val arg1 = ArgMatcher("arg1")
+    val arg2 = ArgMatcher("arg2")
+    val valueTable = new CmdArgValueTable()
+    CmdArgRelationship(ExclusiveFrom, arg1, arg2).verify(valueTable)
   }
 }

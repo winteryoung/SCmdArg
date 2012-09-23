@@ -6,41 +6,40 @@ import CmdArgRelationshipTypeEnum._
 /**
  * @author Winter Young
  */
-trait CmdArgCombination {
-  def matches(argNames: collection.Set[String]): Boolean
-  def cmdArgCombinationStr: String
-  def simplify(): CmdArgCombination
+trait CmdArgMatcher {
+  def matches(valueTable: CmdArgValueTable): Boolean
+  def matcherString: String
+  def simplifyMatcherTree(): CmdArgMatcher
 
-  def dependsOn(cmdArgComb: CmdArgCombination): CmdArgRelationship = {
+  def dependsOn(cmdArgComb: CmdArgMatcher): CmdArgRelationship = {
     CmdArgRelationship(DependsOn, this, cmdArgComb)
   }
 
   def ~> = dependsOn _
 
-  def exclusiveFrom(cmdArgComb: CmdArgCombination): CmdArgRelationship = {
+  def exclusiveFrom(cmdArgComb: CmdArgMatcher): CmdArgRelationship = {
     CmdArgRelationship(ExclusiveFrom, this, cmdArgComb)
   }
 
   def !~> = exclusiveFrom _
 
-  def and(comb: CmdArgCombination): CmdArgCombination = {
-    StdCmdArgCombination(And, Seq(this, comb))
+  def and(comb: CmdArgMatcher): CmdArgMatcher = {
+    StdCmdArgMatcher(And, Seq(this, comb))
   }
 
-  def or(comb: CmdArgCombination): CmdArgCombination = {
-    StdCmdArgCombination(Or, Seq(this, comb))
+  def or(comb: CmdArgMatcher): CmdArgMatcher = {
+    StdCmdArgMatcher(Or, Seq(this, comb))
   }
 }
 
-case class StdCmdArgCombination(operator: AndOr,
-                                operatees: Seq[CmdArgCombination])
-  extends CmdArgCombination {
+case class StdCmdArgMatcher(operator: AndOr, operatees: Seq[CmdArgMatcher])
+  extends CmdArgMatcher {
 
-  def matches(argNames: collection.Set[String]) = {
+  def matches(valueTable: CmdArgValueTable) = {
     var shortCircuit = false
     var result = true
     for (operatee <- operatees if !shortCircuit) {
-      result = operatee.matches(argNames)
+      result = operatee.matches(valueTable)
       if (operator == And && !result) {
         shortCircuit = true
       }
@@ -51,8 +50,8 @@ case class StdCmdArgCombination(operator: AndOr,
     result
   }
 
-  def cmdArgCombinationStr = {
-    val simplifiedComb = simplify()
+  def matcherString = {
+    val simplifiedComb = simplifyMatcherTree()
     val sep = operator match {
       case And => " and "
       case Or => " or "
@@ -65,18 +64,18 @@ case class StdCmdArgCombination(operator: AndOr,
         sb.append(sep)
       }
       metFirst = true
-      sb.append(operatee.cmdArgCombinationStr)
+      sb.append(operatee.matcherString)
     }
     sb.append(")")
     sb.toString()
   }
 
-  def simplify() = {
-    val newOperatees = collection.mutable.ListBuffer[CmdArgCombination]()
+  def simplifyMatcherTree() = {
+    val newOperatees = collection.mutable.ListBuffer[CmdArgMatcher]()
     for (operatee <- operatees) {
-      val simplifiedOperatee = operatee.simplify()
+      val simplifiedOperatee = operatee.simplifyMatcherTree()
       simplifiedOperatee match {
-        case StdCmdArgCombination(op, ops) => {
+        case StdCmdArgMatcher(op, ops) => {
           if (op == operator) {
             newOperatees ++= ops
           }
@@ -87,6 +86,6 @@ case class StdCmdArgCombination(operator: AndOr,
         case _ => newOperatees += simplifiedOperatee
       }
     }
-    StdCmdArgCombination(operator, newOperatees)
+    StdCmdArgMatcher(operator, newOperatees)
   }
 }

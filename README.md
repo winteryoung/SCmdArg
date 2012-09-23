@@ -104,6 +104,24 @@ val after = arg[Int]("after", shortName = Some('A'))
 > app -A1 -B3
 ```
 
+### Multi-value Arguments
+
+A multi-value argument is one that takes a single value, but if it appears multiple times on the command line,
+each occurrence adds its value to the list of already accumulated values for the argument.
+
+**Example**
+```scala
+val cmdArgs = new CmdArgParser("app") {
+  val arg1 = marg[Int]("arg1")
+}
+cmdArgs.parse0(args)
+println(cmdArgs.arg1)
+```
+```
+> app --arg1 1 --arg1 2 --arg1 3
+Seq(1, 2, 3)
+```
+
 ### Help Support
 
 You can display the help message explicitly by invoking the `displayHelp()` method. SCmdArg automatically displays help when an argument parsing error occurred. The help message is composed of the application description which you would specify by setting `appDesc` property of `CmdArgParser` and the argument description list.
@@ -228,8 +246,5 @@ rel((z or (x and y)) ~> (u or v))
 SCmdArg doesn't support some features in other command line argument parsers (like Argot):
 
 * Multiple default arguments / positional arguments
-Multiple default arguments allows you to specify multiple arguments without giving their argument names.
 
-* Multi-value arguments
-A multi-value option is one that takes a single value, but if it appears multiple times on the command line,
-each occurrence adds its value to the list of already accumulated values for the option.
+Multiple default arguments allows you to specify multiple arguments without giving their argument names.
