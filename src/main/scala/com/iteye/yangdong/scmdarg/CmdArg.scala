@@ -14,13 +14,24 @@ sealed abstract class CmdArg[T](val cmdArgTable: CmdArgTable,
                                 val validValueSet: Option[Set[String]] = None)
   extends CmdArgMatcher {
 
-  if (argName.length < 2) {
-    throw new Exception("Argument name can't be less than 2 characters.")
-  }
-
   def getOption: Option[T]
   val isBooleanCmdArg: Boolean
   def validateValue(argValue: String): Boolean
+
+  protected def onLoaded() {
+    if (argName.length < 2) {
+      throw new Exception("Argument name can't be less than 2 characters.")
+    }
+    if (isBooleanCmdArg) {
+      if (!valueName.isEmpty) {
+        throw new Exception("Boolean argument can't have value name.")
+      }
+      default match {
+        case Some(d) => throw new Exception("Boolean argument can't have a true default value")
+        case _ =>
+      }
+    }
+  }
 
   def get = {
     getOption match {
@@ -36,6 +47,7 @@ sealed abstract class CmdArg[T](val cmdArgTable: CmdArgTable,
   def simplifyMatcherTree() = this
 
   def argName = _argName
+
   private[scmdarg] def argName_=(v: String) {
     if (v.length < 2) {
       throw new Exception("Argument name can't be less than 2 characters.")
@@ -88,6 +100,8 @@ case class SingleValueCmdArg[T](override val cmdArgTable: CmdArgTable,
 
   def ===(expectedValue: String): CmdArgMatcher = EqualityCmdArgMatcher(argName, expectedValue, _ == _)
   def !==(expectedValue: String) = EqualityCmdArgMatcher(argName, expectedValue, _ != _)
+
+  onLoaded()
 }
 
 case class MultiValueCmdArg[T](override val cmdArgTable: CmdArgTable,
@@ -125,4 +139,6 @@ case class MultiValueCmdArg[T](override val cmdArgTable: CmdArgTable,
 
   def contains(expectedValue: String): CmdArgMatcher = ContainmentCmdArgMatcher(argName, expectedValue, _ == _)
   def notContains(expectedValue: String): CmdArgMatcher = ContainmentCmdArgMatcher(argName, expectedValue, _ != _)
+
+  onLoaded()
 }

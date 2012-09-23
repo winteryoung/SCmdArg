@@ -2,10 +2,13 @@ package com.iteye.yangdong.scmdarg
 
 import org.scalatest.FunSuite
 import AndOrEnum._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 /**
  * @author Winter Young
  */
+@RunWith(classOf[JUnitRunner])
 class CmdArgMatcherTest extends FunSuite {
   def argMatcher(argName: String) = {
     ArgMatcher(argName)
@@ -82,7 +85,7 @@ class CmdArgMatcherTest extends FunSuite {
     }
   }
 
-  test("matcherString") {
+  test("matcher string") {
     val arg1 = argMatcher("arg1")
     val arg2 = argMatcher("arg2")
     val arg3 = argMatcher("arg3")

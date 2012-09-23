@@ -22,7 +22,7 @@ abstract class CmdArgValueConverter[T: ClassManifest] extends (String => T) {
             throw new CmdArgParserException(custMsg)
           case _ => {
             val className = classManifest[T].erasure.getSimpleName
-            throw new CmdArgParserException(""""%s" is not a %s""" format (v1, className))
+            throw new CmdArgParserException(""""%s" is not %s""" format (v1, className))
           }
         }
       }

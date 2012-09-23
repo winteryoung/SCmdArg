@@ -2,6 +2,7 @@ package com.iteye.yangdong.scmdarg
 
 import java.io.{PrintWriter, Writer}
 import collection.mutable
+import java.lang.reflect.Field
 
 /**
  * @author Winter Young
@@ -19,7 +20,7 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
   private var _outWriter: Writer = new PrintWriter(System.out)
   private var _errWriter: Writer = new PrintWriter(System.err)
 
-  protected val helpArg = arg[Boolean](desc = "Display this help message", shortName = Some('h'))
+  protected val help = arg[Boolean](desc = "Display this help message", shortName = Some('h'))
 
   private val newline = System.getProperty("line.separator")
 
@@ -46,7 +47,7 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
     try {
       parse0(args)
 
-      if (helpArg.get) {
+      if (help.get) {
         displayHelp()
 
         if (autoExit) {
@@ -67,18 +68,29 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
     }
   }
 
+  def getAllCmdArgFields(fields: Vector[Field], klass: Class[_]): Vector[Field] = {
+    var fs = Vector[Field](fields: _*)
+    if (klass.getSuperclass != null) {
+      fs = fs ++ getAllCmdArgFields(fs, klass.getSuperclass)
+    }
+    for (field <- klass.getDeclaredFields if classOf[CmdArg[_]].isAssignableFrom(field.getType)) {
+      fs :+= field
+    }
+    fs
+  }
+
   def defineArgs() {
     if (!defined) {
-      for (field <- this.getClass.getDeclaredFields) {
+      for (field <- getAllCmdArgFields(Vector(), getClass)) {
         val fieldName = field.getName
-
+        field.setAccessible(true)
+        val fieldValue = field.get(this)
         if (cmdArgNameList.contains(fieldName)) {
           throw new Exception("Duplicated definition for --" + fieldName)
         }
         cmdArgNameList += fieldName
 
-        field.setAccessible(true)
-        val cmdArg = field.get(this).asInstanceOf[CmdArg[_]]
+        val cmdArg = fieldValue.asInstanceOf[CmdArg[_]]
         cmdArg.argName = fieldName
 
         cmdArgTable.defineArg(cmdArg)
@@ -101,23 +113,45 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
       val valueName = cmdArg.valueName
 
       if (cmdArg.shortName != None) {
-        _outWriter.write("-%s %s" format (cmdArg.shortName.get, valueName))
+        if (valueName.isEmpty) {
+          _outWriter.write("-" + cmdArg.shortName.get)
+        }
+        else {
+          _outWriter.write("-%s %s" format (cmdArg.shortName.get, valueName))
+        }
         _outWriter.write(newline)
       }
-      _outWriter.write("--%s %s" format (argName, valueName))
+      if (valueName.isEmpty) {
+        _outWriter.write("--" + cmdArg.argName)
+      }
+      else {
+        _outWriter.write("--%s %s" format (cmdArg.argName, valueName))
+      }
+      val attribStr = getArgAttributeString(cmdArg)
+      if (!attribStr.isEmpty) {
+        _outWriter.write(" (%s)" format attribStr)
+      }
       _outWriter.write(newline)
 
-      _outWriter.write("   " + cmdArg.desc + newline)
-      if (cmdArg.isRequired) {
-        _outWriter.write("   > Is required." + newline)
-      }
-      if (cmdArg.isDefault) {
-        _outWriter.write("   > Is default." + newline)
-      }
-      if (cmdArg.default != None) {
-        _outWriter.write("   > Default value: " + cmdArg.default.get + newline)
-      }
+      _outWriter.write("   " + cmdArg.desc + newline + newline)
     }
+  }
+
+  def getArgAttributeString(cmdArg: CmdArg[_]) = {
+    var attribs = Vector[String]()
+    if (cmdArg.isRequired) {
+      attribs :+= "required"
+    }
+    if (cmdArg.isDefault) {
+      attribs :+= "default argument"
+    }
+    if (cmdArg.isInstanceOf[MultiValueCmdArg[_]]) {
+      attribs :+= "multiple"
+    }
+    if (cmdArg.default.isDefined) {
+      attribs :+= ("default value: " + cmdArg.default.get)
+    }
+    attribs.mkString(", ")
   }
 
   def displayHelp() {
@@ -161,9 +195,6 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
       val cmdArg = cmdArgTable.getDef(argName)
       cmdArg.default match {
         case Some(d) => {
-          if (cmdArg.isBooleanCmdArg && d == "true") {
-            throw new Exception("true is not allowed as a default value for boolean arguments")
-          }
           if (!cmdArgTable.isValueGiven(argName)) {
             cmdArgTable.setArgValue(argName, d)
           }

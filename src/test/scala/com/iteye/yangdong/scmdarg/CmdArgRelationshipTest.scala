@@ -2,10 +2,13 @@ package com.iteye.yangdong.scmdarg
 
 import org.scalatest.FunSuite
 import CmdArgRelationshipTypeEnum._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 /**
  * @author Winter Young
  */
+@RunWith(classOf[JUnitRunner])
 class CmdArgRelationshipTest extends FunSuite {
   test("Normal depends on relationshiop") {
     val arg1 = ArgMatcher("arg1")
