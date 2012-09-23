@@ -35,6 +35,9 @@ sealed abstract class CmdArg[T](val cmdArgTable: CmdArgTable,
   private[scmdarg] def argName_=(v: String) { _argName = v }
 
   def matches(valueTable: CmdArgValueTable) = valueTable.isValueGiven(argName)
+
+  def ===(expectedValue: String): CmdArgMatcher = EqualityCmdArgMatcher(argName, expectedValue)
+  def contains(expectedValue: String): CmdArgMatcher = ContainmentCmdArgMatcher(argName, expectedValue)
 }
 
 case class SingleValueCmdArg[T](override val cmdArgTable: CmdArgTable,

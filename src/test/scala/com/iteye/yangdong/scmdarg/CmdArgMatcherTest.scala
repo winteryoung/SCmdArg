@@ -75,7 +75,7 @@ class CmdArgMatcherTest extends FunSuite {
     val matcher = arg1 and arg2 and arg3
 
     matcher.simplifyMatcherTree() match {
-      case StdCmdArgMatcher(op, ops) => {
+      case AndOrCmdArgMatcher(op, ops) => {
         expect(And)(op)
         expect(Seq(arg1, arg2, arg3))(ops)
       }
@@ -90,5 +90,27 @@ class CmdArgMatcherTest extends FunSuite {
     val matcher = arg1 and arg2 and arg3 or arg4
 
     expect("((--arg1 and --arg2 and --arg3) or --arg4)")(matcher.matcherString)
+  }
+
+  test("equality matcher") {
+    expect(true) {
+      val valueTable = new CmdArgValueTable(("arg1", "1"))
+      EqualityCmdArgMatcher("arg1", "1").matches(valueTable)
+    }
+    expect(false) {
+      val valueTable = new CmdArgValueTable(("arg1", "2"))
+      EqualityCmdArgMatcher("arg1", "1").matches(valueTable)
+    }
+  }
+
+  test("containment matcher") {
+    val valueTable = new CmdArgValueTable(("arg1", "1"), ("arg1", "2"))
+    expect(true) {
+      ContainmentCmdArgMatcher("arg1", "1").matches(valueTable)
+      ContainmentCmdArgMatcher("arg1", "2").matches(valueTable)
+    }
+    expect(false) {
+      ContainmentCmdArgMatcher("arg1", "3").matches(valueTable)
+    }
   }
 }

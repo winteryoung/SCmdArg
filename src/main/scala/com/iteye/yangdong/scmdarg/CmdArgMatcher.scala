@@ -24,15 +24,15 @@ trait CmdArgMatcher {
   def !~> = exclusiveFrom _
 
   def and(comb: CmdArgMatcher): CmdArgMatcher = {
-    StdCmdArgMatcher(And, Seq(this, comb))
+    AndOrCmdArgMatcher(And, Seq(this, comb))
   }
 
   def or(comb: CmdArgMatcher): CmdArgMatcher = {
-    StdCmdArgMatcher(Or, Seq(this, comb))
+    AndOrCmdArgMatcher(Or, Seq(this, comb))
   }
 }
 
-case class StdCmdArgMatcher(operator: AndOr, operatees: Seq[CmdArgMatcher])
+case class AndOrCmdArgMatcher(operator: AndOr, operatees: Seq[CmdArgMatcher])
   extends CmdArgMatcher {
 
   def matches(valueTable: CmdArgValueTable) = {
@@ -75,7 +75,7 @@ case class StdCmdArgMatcher(operator: AndOr, operatees: Seq[CmdArgMatcher])
     for (operatee <- operatees) {
       val simplifiedOperatee = operatee.simplifyMatcherTree()
       simplifiedOperatee match {
-        case StdCmdArgMatcher(op, ops) => {
+        case AndOrCmdArgMatcher(op, ops) => {
           if (op == operator) {
             newOperatees ++= ops
           }
@@ -86,6 +86,33 @@ case class StdCmdArgMatcher(operator: AndOr, operatees: Seq[CmdArgMatcher])
         case _ => newOperatees += simplifiedOperatee
       }
     }
-    StdCmdArgMatcher(operator, newOperatees)
+    AndOrCmdArgMatcher(operator, newOperatees)
   }
+}
+
+case class EqualityCmdArgMatcher(argName: String, expectedArgValue: String) extends CmdArgMatcher {
+  def matches(valueTable: CmdArgValueTable) = {
+    var ret = false
+    if (valueTable.isValueGiven(argName)) {
+      val values = valueTable(argName)
+      if (values.size == 1) {
+        ret = valueTable(argName).find(_ == expectedArgValue).isDefined
+      }
+    }
+    ret
+  }
+
+  def matcherString = "(--%s = %s)" format (argName, expectedArgValue)
+
+  def simplifyMatcherTree() = this
+}
+
+case class ContainmentCmdArgMatcher(argName: String, expectedContainedValue: String) extends CmdArgMatcher {
+  def matches(valueTable: CmdArgValueTable) = {
+    valueTable.isValueGiven(argName) && valueTable(argName).find(_ == expectedContainedValue).isDefined
+  }
+
+  def matcherString = "(--%s contains %s)" format (argName, expectedContainedValue)
+
+  def simplifyMatcherTree() = this
 }
