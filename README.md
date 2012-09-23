@@ -259,7 +259,6 @@ If "inputFile" argument is also essential to "countLineNumbers" action, then we 
 There an operator expresses this relationship "<~>":
 ```scala
 rel(inputFile <~> (action === "countLineNumbers"))
-}
 ```
 
 If two arguments are mutually exclusive, we can use "<~!~>". Here is the another form of the above definition:
