@@ -98,13 +98,15 @@ case class AndOrCmdArgMatcher(operator: AndOr, operatees: Seq[CmdArgMatcher])
   }
 }
 
-case class EqualityCmdArgMatcher(argName: String, expectedArgValue: String) extends CmdArgMatcher {
+case class EqualityCmdArgMatcher(argName: String,
+                                 expectedArgValue: String,
+                                 cmp: (String, String) => Boolean = _ == _) extends CmdArgMatcher {
   def matches(valueTable: CmdArgValueTable) = {
     var ret = false
     if (valueTable.isValueGiven(argName)) {
       val values = valueTable(argName)
       if (values.size == 1) {
-        ret = valueTable(argName).find(_ == expectedArgValue).isDefined
+        ret = valueTable(argName).find(cmp(_, expectedArgValue)).isDefined
       }
     }
     ret
@@ -115,9 +117,11 @@ case class EqualityCmdArgMatcher(argName: String, expectedArgValue: String) exte
   def simplifyMatcherTree() = this
 }
 
-case class ContainmentCmdArgMatcher(argName: String, expectedContainedValue: String) extends CmdArgMatcher {
+case class ContainmentCmdArgMatcher(argName: String,
+                                    expectedContainedValue: String,
+                                    cmp: (String, String) => Boolean = _ == _) extends CmdArgMatcher {
   def matches(valueTable: CmdArgValueTable) = {
-    valueTable.isValueGiven(argName) && valueTable(argName).find(_ == expectedContainedValue).isDefined
+    valueTable.isValueGiven(argName) && valueTable(argName).find(cmp(_, expectedContainedValue)).isDefined
   }
 
   def matcherString = "(--%s contains %s)" format (argName, expectedContainedValue)

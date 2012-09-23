@@ -44,9 +44,6 @@ sealed abstract class CmdArg[T](val cmdArgTable: CmdArgTable,
   }
 
   def matches(valueTable: CmdArgValueTable) = valueTable.isValueGiven(argName)
-
-  def ===(expectedValue: String): CmdArgMatcher = EqualityCmdArgMatcher(argName, expectedValue)
-  def contains(expectedValue: String): CmdArgMatcher = ContainmentCmdArgMatcher(argName, expectedValue)
 }
 
 case class SingleValueCmdArg[T](override val cmdArgTable: CmdArgTable,
@@ -88,6 +85,9 @@ case class SingleValueCmdArg[T](override val cmdArgTable: CmdArgTable,
       case _: Exception => false
     }
   }
+
+  def ===(expectedValue: String): CmdArgMatcher = EqualityCmdArgMatcher(argName, expectedValue, _ == _)
+  def !==(expectedValue: String) = EqualityCmdArgMatcher(argName, expectedValue, _ != _)
 }
 
 case class MultiValueCmdArg[T](override val cmdArgTable: CmdArgTable,
@@ -122,4 +122,7 @@ case class MultiValueCmdArg[T](override val cmdArgTable: CmdArgTable,
       case _: Exception => false
     }
   }
+
+  def contains(expectedValue: String): CmdArgMatcher = ContainmentCmdArgMatcher(argName, expectedValue, _ == _)
+  def notContains(expectedValue: String): CmdArgMatcher = ContainmentCmdArgMatcher(argName, expectedValue, _ != _)
 }
