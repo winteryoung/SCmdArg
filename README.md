@@ -7,7 +7,7 @@ A Scala command line argument/option parser.
 This project is distributed under the Apache software license, version 2.0.
 You can see the terms here: http://www.apache.org/licenses/LICENSE-2.0.txt
 
-## Simplest case
+## Simplest Case
 ```scala
 import com.iteye.yangdong.scmdarg._
 import com.iteye.yangdong.scmdarg.CmdArgValueConverter._
@@ -54,6 +54,7 @@ arg[String](shortName = Some('a'))
 
 Turning a boolean argument value to `true` requires the presence of the argument name.
 Explicitly setting `true` or `false` is not supported and the default value to a boolean argument must be `false`.
+
 **Defining the argument**
 ```scala
 val cmdArgs = new CmdArgParser("app") {
@@ -94,6 +95,7 @@ someCommand | grep -A1 -B3 somePattern
 ```
 
 Similarly,
+
 **Defining the arguments**
 ```scala
 val before = arg[Int](shortName = Some('B'))
