@@ -176,4 +176,14 @@ class CmdArgParserTest extends FunSuite {
     cmdArgs.parse0(Array("--arg1", "1", "--arg1", "2", "--arg1", "3"))
     expect(Seq(1, 2, 3)) { cmdArgs.arg1.get }
   }
+
+  test("valid value set in multi-value arg") {
+    val cmdArgs = new CmdArgParser("app") {
+      val arg1 = marg[Int](validValueSet = Some(Set("1", "2", "3")))
+    }
+    cmdArgs.parse0(Array("--arg1", "1", "--arg1", "2"))
+    intercept[CmdArgParserException] {
+      cmdArgs.parse0(Array("--arg1", "4"))
+    }
+  }
 }

@@ -10,9 +10,15 @@ class CmdArgTable {
   private val shortNameToLongName = mutable.HashMap.empty[Char, String]
   private var defaultArgName: Option[String] = None
 
-  private[scmdarg] val valueTable = new CmdArgValueTable
+  private var _valueTable = new CmdArgValueTable
+
+  private[scmdarg] def valueTable = _valueTable
 
   def argNames = valueTable.argNames
+
+  def clear() {
+    _valueTable = new CmdArgValueTable
+  }
 
   def validateRequiredness() {
     for (cmdArg <- defTable.values if cmdArg.isRequired) {

@@ -14,6 +14,10 @@ sealed abstract class CmdArg[T](val cmdArgTable: CmdArgTable,
                                 val validValueSet: Option[Set[String]] = None)
   extends CmdArgMatcher {
 
+  if (argName.length < 2) {
+    throw new Exception("Argument name can't be less than 2 characters.")
+  }
+
   def getOption: Option[T]
   val isBooleanCmdArg: Boolean
   def validateValue(argValue: String): Boolean
@@ -32,7 +36,12 @@ sealed abstract class CmdArg[T](val cmdArgTable: CmdArgTable,
   def simplifyMatcherTree() = this
 
   def argName = _argName
-  private[scmdarg] def argName_=(v: String) { _argName = v }
+  private[scmdarg] def argName_=(v: String) {
+    if (v.length < 2) {
+      throw new Exception("Argument name can't be less than 2 characters.")
+    }
+    _argName = v
+  }
 
   def matches(valueTable: CmdArgValueTable) = valueTable.isValueGiven(argName)
 
@@ -95,7 +104,7 @@ case class MultiValueCmdArg[T](override val cmdArgTable: CmdArgTable,
 
   def getOption = {
     if (cmdArgTable.isValueGiven(argName)) {
-      Some(cmdArgTable.getValue(argName).map(valueConverter(_)))
+      Some(Seq(cmdArgTable.getValue(argName).map(valueConverter(_)): _*))
     }
     else {
       None

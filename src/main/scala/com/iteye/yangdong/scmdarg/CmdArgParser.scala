@@ -7,14 +7,14 @@ import collection.mutable
  * @author Winter Young
  */
 abstract class CmdArgParser(appName: String, appDesc: String = "") {
-  private val cmdArgTable = new CmdArgTable()
+  private val cmdArgTable = new CmdArgTable
   private val cmdArgRelationships = mutable.ListBuffer[CmdArgRelationship]()
 
   private val cmdArgNameList = mutable.LinkedHashSet[String]()
 
   private var autoExit = true
-
   private var error = false
+  private var defined = false
 
   private var _outWriter: Writer = new PrintWriter(System.out)
   private var _errWriter: Writer = new PrintWriter(System.err)
@@ -22,6 +22,11 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
   protected val helpArg = arg[Boolean](desc = "Display this help message", shortName = Some('h'))
 
   private val newline = System.getProperty("line.separator")
+
+  private def reset() {
+    cmdArgTable.clear()
+    error = false
+  }
 
   def setOutWriter(writer: Writer) {
     _outWriter = writer
@@ -63,23 +68,27 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
   }
 
   def defineArgs() {
-    for (field <- this.getClass.getDeclaredFields) {
-      val fieldName = field.getName
-      
-      if (cmdArgNameList.contains(fieldName)) {
-        throw new Exception("Duplicated definition for --" + fieldName)
+    if (!defined) {
+      for (field <- this.getClass.getDeclaredFields) {
+        val fieldName = field.getName
+
+        if (cmdArgNameList.contains(fieldName)) {
+          throw new Exception("Duplicated definition for --" + fieldName)
+        }
+        cmdArgNameList += fieldName
+
+        field.setAccessible(true)
+        val cmdArg = field.get(this).asInstanceOf[CmdArg[_]]
+        cmdArg.argName = fieldName
+
+        cmdArgTable.defineArg(cmdArg)
       }
-      cmdArgNameList += fieldName
-
-      field.setAccessible(true)
-      val cmdArg = field.get(this).asInstanceOf[CmdArg[_]]
-      cmdArg.argName = fieldName
-
-      cmdArgTable.defineArg(cmdArg)
+      defined = true
     }
   }
 
   private[scmdarg] def parse0(args: Array[String]) {
+    reset()
     defineArgs()
     fillArgValues(args)
     validate()
