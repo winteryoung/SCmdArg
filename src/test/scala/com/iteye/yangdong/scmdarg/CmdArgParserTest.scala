@@ -146,6 +146,18 @@ class CmdArgParserTest extends FunSuite {
     }
   }
 
+  test("mutually depends on relationship") {
+    intercept[CmdArgParserException] {
+      val args = Array("--arg1", "1")
+      new CmdArgParser("app") {
+        val arg1 = arg[Int]()
+        val arg2 = arg[Int]()
+
+        rel(arg2 <~> arg1)
+      }.parse0(args)
+    }
+  }
+
   test("Valid value set") {
     def createParser() = {
       new CmdArgParser("app") {

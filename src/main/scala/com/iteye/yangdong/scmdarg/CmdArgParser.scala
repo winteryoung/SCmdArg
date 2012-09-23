@@ -238,7 +238,7 @@ abstract class CmdArgParser(appName: String, appDesc: String = "") {
     MultiValueCmdArg(cmdArgTable, "#Undefined#", desc, shortName, valueName, isRequired, isDefault, default, validValueSet = validValueSet)
   }
 
-  def rel(argRel: CmdArgRelationship) {
-    cmdArgRelationships += argRel
+  def rel(argRels: Seq[CmdArgRelationship]) {
+    cmdArgRelationships ++= argRels
   }
 }

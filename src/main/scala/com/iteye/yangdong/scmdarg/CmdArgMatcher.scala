@@ -11,17 +11,25 @@ trait CmdArgMatcher {
   def matcherString: String
   def simplifyMatcherTree(): CmdArgMatcher
 
-  def dependsOn(cmdArgComb: CmdArgMatcher): CmdArgRelationship = {
-    CmdArgRelationship(DependsOn, this, cmdArgComb)
+  def dependsOn(cmdArgComb: CmdArgMatcher): Seq[CmdArgRelationship] = {
+    Seq(CmdArgRelationship(DependsOn, this, cmdArgComb))
   }
 
   def ~> = dependsOn _
 
-  def exclusiveFrom(cmdArgComb: CmdArgMatcher): CmdArgRelationship = {
-    CmdArgRelationship(ExclusiveFrom, this, cmdArgComb)
+  def <~>(cmdArgMatcher: CmdArgMatcher): Seq[CmdArgRelationship] = {
+    (this ~> cmdArgMatcher) ++ (cmdArgMatcher ~> this)
+  }
+
+  def exclusiveFrom(cmdArgComb: CmdArgMatcher): Seq[CmdArgRelationship] = {
+    Seq(CmdArgRelationship(ExclusiveFrom, this, cmdArgComb))
   }
 
   def !~> = exclusiveFrom _
+
+  def <~!~>(cmdArgMatcher: CmdArgMatcher): Seq[CmdArgRelationship] = {
+    (this !~> cmdArgMatcher) ++ (cmdArgMatcher !~> this)
+  }
 
   def and(comb: CmdArgMatcher): CmdArgMatcher = {
     AndOrCmdArgMatcher(And, Seq(this, comb))
