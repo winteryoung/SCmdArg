@@ -255,6 +255,19 @@ val cmdArgs = new CmdArgParser("app") {
 }
 ```
 
+If "inputFile" argument is also essential to "countLineNumbers" action, then we say they are mutually dependent.
+There an operator expresses this relationship "<~>":
+```scala
+rel(inputFile <~> (action === "countLineNumbers"))
+```
+
+If two arguments are mutually exclusive, we can use "<~!~>". Here is the another form of the above definition:
+```scala
+rel(inputFile <~!~> (action !== "countLineNumbers"))
+```
+
+`!==` means not equal to.
+
 Suppose the "actions" argument is a multi-value argument and "inputFile" only makes sense if "actions"
 contains "countLineNumbers":
 ```scala
@@ -266,7 +279,10 @@ val cmdArgs = new CmdArgParser("app") {
 }
 ```
 
-In fact, it could be more versatile. Let's say the presence of both x and y only makes sense if u or v is present:
+Similarly, there is an method `notContains` available on `actions`.
+
+In fact, validation could be more versatile. Let's say the presence of both x and y
+only makes sense if u or v is present:
 ```scala
 rel((x and y) ~> (u or v))
 ```
