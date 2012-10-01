@@ -222,7 +222,7 @@ Let's say you are writing an app that counts the line numbers of the given input
 An argument "--printFileName" would only make sense if a file was given. So:
 ```scala
 val cmdArgs = new CmdArgParser("app") {
-  val file = arg[Path]("file")
+  val file = arg[Path]()
   val printFileName = arg[Boolean]()
   
   rel(printFileName ~> file)
@@ -256,7 +256,7 @@ val cmdArgs = new CmdArgParser("app") {
 ```
 
 If "inputFile" argument is also essential to "countLineNumbers" action, then we say they are mutually dependent.
-There an operator expresses this relationship "<~>":
+There is an operator expresses this relationship: ```<~>```:
 ```scala
 rel(inputFile <~> (action === "countLineNumbers"))
 ```
@@ -298,3 +298,4 @@ SCmdArg doesn't support some features in other command line argument parsers (li
 * Multiple default arguments / positional arguments
 
 Multiple default arguments allows you to specify multiple arguments without giving their argument names.
+SCmdArg only supports a single default argument.
