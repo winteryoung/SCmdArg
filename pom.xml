@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.iteye.yangdong</groupId>
   <artifactId>SCmdArg</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <inceptionYear>2012</inceptionYear>
   <name>Scala Command Line Argument Parser</name>
   <description>Scala command line argument/option parser.\</description>
